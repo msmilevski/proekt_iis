@@ -25,5 +25,5 @@ with open(file_path, newline='', encoding="utf8") as product_outfits:
             name = str(row[0])+".jpg"
             url = row[-1].replace('"', '')
             url_to_image(url, name, directory_path)
-            break
+            print(name)
         i += 1
