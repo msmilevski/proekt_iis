@@ -3,6 +3,11 @@ import cv2
 import csv
 import json
 import operator
+import itertools
+from glob import glob
+import os
+import numpy as np
+import h5py
 
 
 # Helper function for reading images from url, resize them and saving them to the given directory
@@ -50,6 +55,7 @@ def find_index_of_broken_images(file_path='data/outfit_products.csv'):
     print(indices)
 
 
+# Function for creating a vocabulary of clothes' names
 def create_clothes_vocabulary(file_path='data/outfit_products.csv'):
     with open(file_path, newline='', encoding="utf8") as product_outfits:
         reader = csv.reader(product_outfits, delimiter=',', quotechar="|")
@@ -66,10 +72,78 @@ def create_clothes_vocabulary(file_path='data/outfit_products.csv'):
                         dictionary[word] += 1
             i += 1
 
-    sorted_dictironary = sorted(dictionary.items(), key=operator.itemgetter(1), reverse=True)
-    print(sorted_dictironary)
+    sorted_dictionary = sorted(dictionary.items(), key=operator.itemgetter(1), reverse=True)
+    print(sorted_dictionary)
     with open('clothes_vocab.json', 'w') as outfile:
-        json.dump(sorted_dictironary, outfile)
+        json.dump(sorted_dictionary, outfile)
 
 
-create_clothes_vocabulary()
+# Function for creating positive and negative training samples
+def create_training_pairs(file_path='./data/products_outfits.csv', image_directory='./data/images/',
+                          save_file_path='./data/dataset.hdf5',
+                          num_negative_samples=4):
+    with open(file_path, newline='', encoding="utf8") as product_outfits:
+        reader = csv.reader(product_outfits, delimiter=',', quotechar="|")
+        i = 0
+        dictionary = {}
+        positive_samples = []
+        for row in reader:
+            if i != 0:
+                product_id = row[0].replace('"', '') + ".jpg"
+                outfit_id = row[1].replace('"', '')
+
+                if not (outfit_id in dictionary.keys()):
+                    dictionary[outfit_id] = [product_id]
+                else:
+                    temp_list = dictionary[outfit_id]
+                    temp_list.append(product_id)
+                    dictionary[outfit_id] = temp_list
+
+                if not (product_id in positive_samples):
+                    positive_samples.append(product_id)
+            i += 1
+
+    outfit_ids = dictionary.keys()
+    positive_sample_images = []
+    # Creating positive samples
+    for idx in outfit_ids:
+        temp_list = dictionary[idx]
+        temp_combinations = list(itertools.permutations(temp_list, 2))
+        for positive_comb in temp_combinations:
+            positive_comb = [list(positive_comb), 1]
+            positive_sample_images.append(positive_comb)
+
+    print(len(positive_sample_images))
+
+    # Getting all image file names
+    image_path_names = [y for x in os.walk(image_directory) for y in glob(os.path.join(x[0], "*.jpg"))]
+    all_image_names = []
+    for path in image_path_names:
+        image_name = path.split("\\")[-1]
+        all_image_names.append(image_name)
+
+    length_all_images = len(all_image_names)
+    # Creating negative pairs
+    negative_sample_images = []
+    for sample in positive_samples:
+        k = 0
+        while k < num_negative_samples:
+            rand_idx = np.random.randint(0, length_all_images)
+            rand_img_name = all_image_names[rand_idx]
+            if sample != rand_img_name:
+                negative_sample_images.append([[sample, rand_img_name], 0])
+                k += 1
+
+    print(len(negative_sample_images))
+
+    # Concatenating the positive and negative samples
+    # And also shuffling them
+    finished_dataset = positive_sample_images + negative_sample_images
+    np.random.shuffle(finished_dataset)
+    finished_dataset = np.array(finished_dataset)
+    print(finished_dataset.shape)
+    data_file = h5py.File(save_file_path, 'w')
+    data_file.create_dataset("data", data=finished_dataset)
+
+
+create_training_pairs()
