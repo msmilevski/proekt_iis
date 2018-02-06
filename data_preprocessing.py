@@ -7,6 +7,7 @@ import itertools
 from glob import glob
 import os
 import numpy as np
+import h5py
 
 
 # Helper function for reading images from url, resize them and saving them to the given directory
@@ -19,6 +20,7 @@ def url_to_image(url, name, directory_path):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (299, 299), interpolation=cv2.INTER_CUBIC)
     cv2.imwrite(directory_path + name, image)
+
 
 # Read images from csv file and save them in a directory
 def save_images_from_file(file_path='data/outfit_products.csv', directory_path='./data/images/'):
@@ -76,7 +78,6 @@ def create_clothes_vocabulary(file_path='data/outfit_products.csv'):
 
 # Function for creating positive and negative training samples
 def create_training_pairs(file_path='./data/products_outfits.csv', image_directory='./data/images/',
-                          save_file_path='./data/clothes_data.hdf5',
                           num_negative_samples=4):
     with open(file_path, newline='', encoding="utf8") as product_outfits:
         reader = csv.reader(product_outfits, delimiter=',', quotechar="|")
@@ -109,8 +110,6 @@ def create_training_pairs(file_path='./data/products_outfits.csv', image_directo
             positive_comb = [list(positive_comb), 1]
             positive_sample_images.append(positive_comb)
 
-    print(len(positive_sample_images))
-
     # Getting all image file names
     image_path_names = [y for x in os.walk(image_directory) for y in glob(os.path.join(x[0], "*.jpg"))]
     all_image_names = []
@@ -130,19 +129,21 @@ def create_training_pairs(file_path='./data/products_outfits.csv', image_directo
                 negative_sample_images.append([[sample, rand_img_name], 0])
                 k += 1
 
-    print(len(negative_sample_images))
-
     # Concatenating the positive and negative samples
     # And also shuffling them
     finished_dataset = positive_sample_images + negative_sample_images
     np.random.shuffle(finished_dataset)
     finished_dataset = np.array(finished_dataset)
+
     # Splitting data to train, valid and test data
-    train_barrier = int(finished_dataset.shape[0]*0.8)
+    train_barrier = int(finished_dataset.shape[0] * 0.8)
     valid_barrier = int(finished_dataset.shape[0] * 0.1)
     test_barrier = int(finished_dataset.shape[0] * 0.2)
     train_dataset = finished_dataset[0:train_barrier]
-    valid_dataset = finished_dataset[train_barrier:train_barrier+valid_barrier]
-    test_dataset = finished_dataset[train_barrier+valid_barrier:train_barrier+valid_barrier+test_barrier]
+    valid_dataset = finished_dataset[train_barrier:train_barrier + valid_barrier]
+    test_dataset = finished_dataset[train_barrier + valid_barrier:train_barrier + valid_barrier + test_barrier]
 
-    return train_dataset, valid_dataset, test_dataset
+    # Saving data to file so we don't have to do this all the time
+    np.save("train-data.out", train_dataset)
+    np.save("valid-data.out", valid_dataset)
+    np.save("test-data.out", test_dataset)
