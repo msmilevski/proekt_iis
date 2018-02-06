@@ -7,7 +7,6 @@ import itertools
 from glob import glob
 import os
 import numpy as np
-import h5py
 
 
 # Helper function for reading images from url, resize them and saving them to the given directory
@@ -20,9 +19,6 @@ def url_to_image(url, name, directory_path):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (299, 299), interpolation=cv2.INTER_CUBIC)
     cv2.imwrite(directory_path + name, image)
-
-    # cv2.imshow("slika", image)
-
 
 # Read images from csv file and save them in a directory
 def save_images_from_file(file_path='data/outfit_products.csv', directory_path='./data/images/'):
@@ -80,7 +76,7 @@ def create_clothes_vocabulary(file_path='data/outfit_products.csv'):
 
 # Function for creating positive and negative training samples
 def create_training_pairs(file_path='./data/products_outfits.csv', image_directory='./data/images/',
-                          save_file_path='./data/dataset.hdf5',
+                          save_file_path='./data/clothes_data.hdf5',
                           num_negative_samples=4):
     with open(file_path, newline='', encoding="utf8") as product_outfits:
         reader = csv.reader(product_outfits, delimiter=',', quotechar="|")
@@ -141,9 +137,12 @@ def create_training_pairs(file_path='./data/products_outfits.csv', image_directo
     finished_dataset = positive_sample_images + negative_sample_images
     np.random.shuffle(finished_dataset)
     finished_dataset = np.array(finished_dataset)
-    print(finished_dataset.shape)
-    data_file = h5py.File(save_file_path, 'w')
-    data_file.create_dataset("data", data=finished_dataset)
+    # Splitting data to train, valid and test data
+    train_barrier = int(finished_dataset.shape[0]*0.8)
+    valid_barrier = int(finished_dataset.shape[0] * 0.1)
+    test_barrier = int(finished_dataset.shape[0] * 0.2)
+    train_dataset = finished_dataset[0:train_barrier]
+    valid_dataset = finished_dataset[train_barrier:train_barrier+valid_barrier]
+    test_dataset = finished_dataset[train_barrier+valid_barrier:train_barrier+valid_barrier+test_barrier]
 
-
-create_training_pairs()
+    return train_dataset, valid_dataset, test_dataset
