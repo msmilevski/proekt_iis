@@ -103,6 +103,7 @@ input_shape = x_train.shape[1:]
 digit_indices = [np.where(y_train == i)[0] for i in range(num_classes)]
 tr_pairs, tr_y = create_pairs(x_train, digit_indices)
 
+
 digit_indices = [np.where(y_test == i)[0] for i in range(num_classes)]
 te_pairs, te_y = create_pairs(x_test, digit_indices)
 

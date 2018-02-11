@@ -7,6 +7,9 @@ import itertools
 from glob import glob
 import os
 import numpy as np
+from keras.models import Model
+from keras.applications.inception_v3 import InceptionV3
+import time
 import h5py
 
 
@@ -105,7 +108,8 @@ def create_training_pairs(file_path='./data/products_outfits.csv', image_directo
     # Creating positive samples
     for idx in outfit_ids:
         temp_list = dictionary[idx]
-        temp_combinations = list(itertools.permutations(temp_list, 2))
+        temp_combinations = list(itertools.combinations(temp_list, 2))
+        print(temp_combinations)
         for positive_comb in temp_combinations:
             positive_comb = [list(positive_comb), 1]
             positive_sample_images.append(positive_comb)
@@ -144,6 +148,7 @@ def create_training_pairs(file_path='./data/products_outfits.csv', image_directo
     test_dataset = finished_dataset[train_barrier + valid_barrier:train_barrier + valid_barrier + test_barrier]
 
     # Saving data to file so we don't have to do this all the time
-    np.save("train-data.out", train_dataset)
-    np.save("valid-data.out", valid_dataset)
-    np.save("test-data.out", test_dataset)
+    np.save("train-data", train_dataset)
+    np.save("valid-data", valid_dataset)
+    np.save("test-data", test_dataset)
+
