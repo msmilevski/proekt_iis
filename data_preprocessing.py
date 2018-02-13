@@ -142,7 +142,7 @@ def create_training_pairs(file_path='./data/products_outfits.csv', image_directo
     # Splitting data to train, valid and test data
     train_barrier = int(finished_dataset.shape[0] * 0.8)
     valid_barrier = int(finished_dataset.shape[0] * 0.1)
-    test_barrier = int(finished_dataset.shape[0] * 0.2)
+    test_barrier = int(finished_dataset.shape[0] * 0.1)
     train_dataset = finished_dataset[0:train_barrier]
     valid_dataset = finished_dataset[train_barrier:train_barrier + valid_barrier]
     test_dataset = finished_dataset[train_barrier + valid_barrier:train_barrier + valid_barrier + test_barrier]

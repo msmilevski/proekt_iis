@@ -15,16 +15,12 @@ Gets to 97.2% test accuracy after 20 epochs.
 from __future__ import absolute_import
 from __future__ import print_function
 import numpy as np
-
-import random
-from keras.datasets import mnist
+import h5py
 from keras.models import Model
 from keras.layers import Input, Flatten, Dense, Dropout, Lambda
 from keras.optimizers import RMSprop
 from keras import backend as K
-
-num_classes = 10
-epochs = 20
+import data_generator as generator
 
 
 def euclidean_distance(vects):
@@ -46,35 +42,16 @@ def contrastive_loss(y_true, y_pred):
                   (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
 
 
-def create_pairs(x, digit_indices):
-    '''Positive and negative pair creation.
-    Alternates between positive and negative pairs.
-    '''
-    pairs = []
-    labels = []
-    n = min([len(digit_indices[d]) for d in range(num_classes)]) - 1
-    for d in range(num_classes):
-        for i in range(n):
-            z1, z2 = digit_indices[d][i], digit_indices[d][i + 1]
-            pairs += [[x[z1], x[z2]]]
-            inc = random.randrange(1, num_classes)
-            dn = (d + inc) % num_classes
-            z1, z2 = digit_indices[d][i], digit_indices[dn][i]
-            pairs += [[x[z1], x[z2]]]
-            labels += [1, 0]
-    return np.array(pairs), np.array(labels)
-
-
 def create_base_network(input_shape):
     '''Base network to be shared (eq. to feature extraction).
     '''
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(128, activation='relu')(x)
+    x = Dense(256, activation='relu')(x)
     x = Dropout(0.1)(x)
-    x = Dense(128, activation='relu')(x)
+    x = Dense(256, activation='relu')(x)
     x = Dropout(0.1)(x)
-    x = Dense(128, activation='relu')(x)
+    x = Dense(256, activation='relu')(x)
     return Model(input, x)
 
 
@@ -92,21 +69,15 @@ def accuracy(y_true, y_pred):
 
 
 # the data, shuffled and split between train and test sets
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train /= 255
-x_test /= 255
-input_shape = x_train.shape[1:]
 
-# create training+test positive and negative pairs
-digit_indices = [np.where(y_train == i)[0] for i in range(num_classes)]
-tr_pairs, tr_y = create_pairs(x_train, digit_indices)
+training_file = h5py.File("data/train_image_embeddings.hdf5", 'r')
+valid_file = h5py.File("data/valid_image_embeddings.hdf5", 'r')
+image_embeddings_train = training_file["image_embeddings"]
+similarity_train = training_file["similarity"]
+image_embeddings_valid = valid_file["image_embeddings"]
+similarity_valid = valid_file["similarity"]
 
-
-digit_indices = [np.where(y_test == i)[0] for i in range(num_classes)]
-te_pairs, te_y = create_pairs(x_test, digit_indices)
-
+input_shape = (1, 4096)
 # network definition
 base_network = create_base_network(input_shape)
 
@@ -125,18 +96,20 @@ distance = Lambda(euclidean_distance,
 model = Model([input_a, input_b], distance)
 
 # train
-rms = RMSprop()
+rms = RMSprop(lr=0.0001)
+epochs = 50
+batch_size = 300
+steps_per_epoch = (len(image_embeddings_train) // batch_size) + 1
 model.compile(loss=contrastive_loss, optimizer=rms, metrics=[accuracy])
-model.fit([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y,
-          batch_size=128,
-          epochs=epochs,
-          validation_data=([te_pairs[:, 0], te_pairs[:, 1]], te_y))
+model.fit_generator(generator.data_generator(image_embeddings_train, similarity_train, batch_size=batch_size),
+                    steps_per_epoch=steps_per_epoch, epochs=epochs)
 
+model.save("model_1.h5")
 # compute final accuracy on training and test sets
-y_pred = model.predict([tr_pairs[:, 0], tr_pairs[:, 1]])
-tr_acc = compute_accuracy(tr_y, y_pred)
-y_pred = model.predict([te_pairs[:, 0], te_pairs[:, 1]])
-te_acc = compute_accuracy(te_y, y_pred)
-
-print('* Accuracy on training set: %0.2f%%' % (100 * tr_acc))
-print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
+# y_pred = model.predict([tr_pairs[:, 0], tr_pairs[:, 1]])
+# tr_acc = compute_accuracy(tr_y, y_pred)
+# y_pred = model.predict([te_pairs[:, 0], te_pairs[:, 1]])
+# te_acc = compute_accuracy(te_y, y_pred)
+#
+# print('* Accuracy on training set: %0.2f%%' % (100 * tr_acc))
+# print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))

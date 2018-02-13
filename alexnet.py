@@ -226,7 +226,7 @@ def preprocess_input(x):
     return x
 
 
-file_path = 'valid-data.npy'
+file_path = 'test-data.npy'
 batch_size = 256
 directory_path = 'data/images/'
 
@@ -254,6 +254,14 @@ for i in range(num_samples):
 
     image_a = cv2.imread(image_a_name)
     image_b = cv2.imread(image_b_name)
+
+#     if type(image_a) is type(None) or type(image_b) is type(None):
+#
+#         continue
+#     else:
+#         new_data.append(data[i])
+#
+# np.save("test-data", new_data)
     image_a = image_a.astype('float32')
     image_a = cv2.resize(image_a, (227, 227))
     image_b = image_b.astype('float32')
@@ -276,7 +284,7 @@ for i in range(num_samples):
 
 print((time.time() - t1) / 60.0)
 print(image_embeddings.shape)
-save_name = "data/valid_image_embeddings.hdf5"
+save_name = "data/test_image_embeddings.hdf5"
 file = h5py.File(save_name, 'w')
 file.create_dataset("image_embeddings", data=image_embeddings)
 file.create_dataset("similarity", data=similarity)
