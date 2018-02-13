@@ -16,8 +16,9 @@ valid_file = h5py.File("data/valid_image_embeddings.hdf5", 'r')
 image_embeddings_valid = valid_file["image_embeddings"]
 similarity_valid = valid_file["similarity"]
 
-model = load_model("model_1.h5")
 
+model = load_model('model_1.h5', custom_objects={'contrastive_loss': contrastive_loss})
+print(model.layers)
 for batch in generator.data_generator(image_embeddings_valid, similarity_valid, batch_size=2):
     images = batch[0]
     similarity = batch[1]

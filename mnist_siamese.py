@@ -18,7 +18,7 @@ import numpy as np
 import h5py
 from keras.models import Model
 from keras.layers import Input, Flatten, Dense, Dropout, Lambda
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adam
 from keras import backend as K
 import data_generator as generator
 
@@ -47,6 +47,8 @@ def create_base_network(input_shape):
     '''
     input = Input(shape=input_shape)
     x = Flatten()(input)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(0.1)(x)
     x = Dense(256, activation='relu')(x)
     x = Dropout(0.1)(x)
     x = Dense(256, activation='relu')(x)
@@ -97,14 +99,15 @@ model = Model([input_a, input_b], distance)
 
 # train
 rms = RMSprop(lr=0.0001)
+adam = Adam(lr=0.0001)
 epochs = 50
 batch_size = 300
 steps_per_epoch = (len(image_embeddings_train) // batch_size) + 1
-model.compile(loss=contrastive_loss, optimizer=rms, metrics=[accuracy])
+model.compile(loss=contrastive_loss, optimizer=adam, metrics=[accuracy])
 model.fit_generator(generator.data_generator(image_embeddings_train, similarity_train, batch_size=batch_size),
                     steps_per_epoch=steps_per_epoch, epochs=epochs)
 
-model.save("model_1.h5")
+model.save("model_2.h5")
 # compute final accuracy on training and test sets
 # y_pred = model.predict([tr_pairs[:, 0], tr_pairs[:, 1]])
 # tr_acc = compute_accuracy(tr_y, y_pred)
