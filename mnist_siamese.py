@@ -21,6 +21,7 @@ from keras.layers import Input, Flatten, Dense, Dropout, Lambda
 from keras.optimizers import RMSprop, Adam
 from keras import backend as K
 import data_generator as generator
+import time
 
 
 def euclidean_distance(vects):
@@ -47,12 +48,11 @@ def create_base_network(input_shape):
     '''
     input = Input(shape=input_shape)
     x = Flatten()(input)
+    x = Dropout(0.2)(x)
     x = Dense(256, activation='relu')(x)
-    x = Dropout(0.1)(x)
     x = Dense(256, activation='relu')(x)
-    x = Dropout(0.1)(x)
     x = Dense(256, activation='relu')(x)
-    x = Dropout(0.1)(x)
+    x = Dropout(0.2)(x)
     x = Dense(256, activation='relu')(x)
     return Model(input, x)
 
@@ -103,11 +103,13 @@ adam = Adam(lr=0.0001)
 epochs = 50
 batch_size = 300
 steps_per_epoch = (len(image_embeddings_train) // batch_size) + 1
-model.compile(loss=contrastive_loss, optimizer=adam, metrics=[accuracy])
+steps_per_valid = (len(image_embeddings_valid) // batch_size) + 1
+t = time.time()
+model.compile(loss=contrastive_loss, optimizer=rms, metrics=[accuracy])
 model.fit_generator(generator.data_generator(image_embeddings_train, similarity_train, batch_size=batch_size),
                     steps_per_epoch=steps_per_epoch, epochs=epochs)
-
-model.save("model_2.h5")
+print(time.time()-t)
+model.save("model_4.h5")
 # compute final accuracy on training and test sets
 # y_pred = model.predict([tr_pairs[:, 0], tr_pairs[:, 1]])
 # tr_acc = compute_accuracy(tr_y, y_pred)
