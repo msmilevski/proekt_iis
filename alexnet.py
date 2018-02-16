@@ -264,5 +264,3 @@ def get_embeddings_from_alexnet(file_name, image_directory_path='../images/', ba
     file.create_dataset("image_embeddings", data=image_embeddings)
     file.create_dataset("similarity", data=similarity)
     file.close()
-
-get_embeddings_from_alexnet(file_name="train")
