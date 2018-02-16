@@ -1,5 +1,8 @@
 import numpy as np
 
+# Function used during training for providing batches of data
+# It is used in model.fit_generator in mnist_siamese.py for generating training data
+# And in evaluate.py for generating valid_data
 def data_generator(img_embed, similarity, batch_size):
     num_train_samples = len(img_embed)
     num_similarity = len(similarity)
@@ -25,5 +28,4 @@ def data_generator(img_embed, similarity, batch_size):
             train_slice_a = train_slice_a.reshape(shape)
             train_slice_b = train_slice_b.reshape(shape)
 
-            #print(train_slice_y.shape)
             yield ([train_slice_a, train_slice_b], train_slice_y)
