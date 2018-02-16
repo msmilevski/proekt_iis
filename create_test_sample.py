@@ -45,9 +45,9 @@ def create_test_sample(image_name='760.jpg'):
 
     # for i in range(len(test_data) - 1):
     #     if image_name in test_data[i][0]:
-    #         print(test_data[i])
+    #         list_items.append(test_data[i])
     #         test_image_a.append(image_embeddings_test[i])
-    #         test_image_a.append(image_embeddings_test[i + 1])
+    #         test_image_b.append(image_embeddings_test[i + 1])
 
     test_image_a = np.array(test_image_a)
     test_image_b = np.array(test_image_b)
@@ -61,6 +61,7 @@ def show_images(indices, list_items, item_name,
                 directory='../images/'):
     similar_items = []
     for idx in indices:
+        print(len(list_items))
         pair = list_items[idx][0]
         item = [s for s in pair if (s != item_name)]
         print(item[0])
