@@ -1,17 +1,3 @@
-'''Trains a Siamese MLP on pairs of digits from the MNIST dataset.
-
-It follows Hadsell-et-al.'06 [1] by computing the Euclidean distance on the
-output of the shared network and by optimizing the contrastive loss (see paper
-for mode details).
-
-# References
-
-- Dimensionality Reduction by Learning an Invariant Mapping
-    http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
-
-Gets to 97.2% test accuracy after 20 epochs.
-2 seconds per epoch on a Titan X Maxwell GPU
-'''
 from __future__ import absolute_import
 from __future__ import print_function
 import numpy as np
@@ -48,9 +34,8 @@ def create_base_network(input_shape):
     '''
     input = Input(shape=input_shape)
     x = Flatten()(input)
+    x = Dense(256, activation='relu')(x)
     x = Dropout(0.2)(x)
-    x = Dense(256, activation='relu')(x)
-    x = Dense(256, activation='relu')(x)
     x = Dense(256, activation='relu')(x)
     x = Dropout(0.2)(x)
     x = Dense(256, activation='relu')(x)

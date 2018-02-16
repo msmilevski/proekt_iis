@@ -6,16 +6,11 @@ from keras import backend as K
 
 
 def compute_accuracy(y_true, y_pred):
-    '''Compute classification accuracy with a fixed threshold on distances.
-    '''
     pred = y_pred.ravel() < 0.5
     return np.mean(pred == y_true)
 
 
 def contrastive_loss(y_true, y_pred):
-    '''Contrastive loss from Hadsell-et-al.'06
-    http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
-    '''
     margin = 1
     return K.mean(y_true * K.square(y_pred) +
                   (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
@@ -43,7 +38,7 @@ for batch in generator.data_generator(image_embeddings_valid, similarity_valid, 
     te_acc = compute_accuracy(valid_y, y_pred)
 
     # print('* Accuracy on training set: %0.2f%%' % (100 * te_acc))
-    print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
+    print('* Accuracy on valid set: %0.2f%%' % (100 * te_acc))
 
 
     i += 1
