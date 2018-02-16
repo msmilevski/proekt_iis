@@ -122,7 +122,7 @@ def create_training_pairs(file_path='./data/products_outfits.csv', image_directo
         all_image_names.append(image_name)
 
     length_all_images = len(all_image_names)
-    # Creating negative pairs
+    # Creating negative samples
     negative_sample_images = []
     for sample in positive_samples:
         k = 0
