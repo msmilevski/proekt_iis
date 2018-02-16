@@ -107,6 +107,3 @@ def start_traing_siamese_network(train_file_location="data/train_image_embedding
     #
     # print('* Accuracy on training set: %0.2f%%' % (100 * tr_acc))
     # print('* Accuracy on test set: %0.2f%%' % (100 * te_acc))
-
-
-start_traing_siamese_network()
