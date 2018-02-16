@@ -81,6 +81,9 @@ def create_clothes_vocabulary(file_path='data/outfit_products.csv'):
 
 # Function for creating positive and negative training samples
 def create_training_pairs(file_path='./data/products_outfits.csv', image_directory='./data/images/',
+                          train_data_path="train-data",
+                          valid_data_path="valid-data",
+                          test_data_path="test-data",
                           num_negative_samples=4):
     with open(file_path, newline='', encoding="utf8") as product_outfits:
         reader = csv.reader(product_outfits, delimiter=',', quotechar="|")
@@ -148,7 +151,6 @@ def create_training_pairs(file_path='./data/products_outfits.csv', image_directo
     test_dataset = finished_dataset[train_barrier + valid_barrier:train_barrier + valid_barrier + test_barrier]
 
     # Saving data to file so we don't have to do this all the time
-    np.save("train-data", train_dataset)
-    np.save("valid-data", valid_dataset)
-    np.save("test-data", test_dataset)
-
+    np.save(train_data_path, train_dataset)
+    np.save(valid_data_path, valid_dataset)
+    np.save(test_data_path, test_dataset)
