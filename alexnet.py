@@ -1,16 +1,3 @@
-################################################################################
-# Michael Guerzhoy and Davi Frossard, 2016
-# AlexNet implementation in TensorFlow, with weights
-# Details:
-# http://www.cs.toronto.edu/~guerzhoy/tf_alexnet/
-#
-# With code from https://github.com/ethereon/caffe-tensorflow
-# Model from  https://github.com/BVLC/caffe/tree/master/models/bvlc_alexnet
-# Weights from Caffe converted using https://github.com/ethereon/caffe-tensorflow
-#
-#
-################################################################################
-
 import sys
 import os
 import numpy as np
