@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # Function used during training for providing batches of data
 # It is used in model.fit_generator in mnist_siamese.py for generating training data
 # And in evaluate.py for generating valid_data

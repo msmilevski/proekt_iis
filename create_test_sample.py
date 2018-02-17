@@ -1,21 +1,11 @@
 import numpy as np
-from keras import backend as K
-from keras.models import Model, load_model
+from keras.models import load_model
 import h5py
 import cv2
+import mnist_siamese as util
 
 
-def compute_accuracy(y_true, y_pred):
-    pred = y_pred.ravel() < 0.5
-    return np.mean(pred == y_true)
-
-
-def contrastive_loss(y_true, y_pred):
-    margin = 1
-    return K.mean(y_true * K.square(y_pred) +
-                  (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
-
-
+# Creates test samples for a given image
 def create_test_sample(image_name='760.jpg'):
     train_data = np.load("train-data.npy")
     valid_data = np.load("valid-data.npy")
@@ -57,32 +47,49 @@ def create_test_sample(image_name='760.jpg'):
     return [test_image_a, test_image_b], list_items
 
 
-def show_images(indices, list_items, item_name,
+# Show the recommendations for an image
+def show_images(model, indices, list_items, sample, item_name,
                 directory='../images/'):
     similar_items = []
+    image_embeddings = []
+    print(len(sample))
     for idx in indices:
-        print(len(list_items))
+        # print(len(list_items))
         pair = list_items[idx][0]
-        item = [s for s in pair if (s != item_name)]
-        print(item[0])
-        similar_items.append(item[0])
 
-    item_image = cv2.imread(directory+item_name)
+        if item_name != pair[0]:
+            item = pair[0]
+            image_embeddings.append(sample[0][idx])
+        else:
+            item = pair[1]
+            image_embeddings.append(sample[1][idx])
+        # print(item)
+        similar_items.append(item)
+
+    # print(len(image_embeddings))
+    # print(model.predict(
+    #     [np.array(image_embeddings[1]).reshape(1, 1, 4096), np.array(image_embeddings[2]).reshape(1, 1, 4096)]))
+    item_image = cv2.imread(directory + item_name)
     for item in similar_items:
-        sim_item_image = cv2.imread(directory+item)
+        sim_item_image = cv2.imread(directory + item)
         item_image = np.concatenate((item_image, sim_item_image), axis=1)
 
     cv2.imshow("slika", item_image)
     cv2.waitKey(0)
 
 
+# For given image creates a recommendation
+# Image_name is path to the image we want to generate recommendations
+# Model_name is path to the trained model
+# Num_recommendations is the number of generated recommendations
+def get_a_recommendation(image_name='1579.jpg', model_name='model_1.h5', num_recommendations=3):
+    model = load_model(model_name, custom_objects={'contrastive_loss': util.contrastive_loss})
+    item_name = image_name
+    sample, list_items = create_test_sample(image_name=item_name)
+    prediction = model.predict(sample)
+    print(prediction)
+    max_predictions = np.argsort(prediction.flatten())[-num_recommendations:]
+    print(max_predictions)
+    show_images(model, max_predictions, list_items, sample, item_name)
 
-
-model = load_model('model_1.h5', custom_objects={'contrastive_loss': contrastive_loss})
-item_name = '156.jpg'
-sample, list_items = create_test_sample(image_name=item_name)
-prediction = model.predict(sample)
-print(prediction)
-max_predictions = np.argsort(prediction.flatten())[-3:]
-print(max_predictions)
-show_images(max_predictions, list_items, item_name)
+get_a_recommendation()

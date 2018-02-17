@@ -7,10 +7,6 @@ import itertools
 from glob import glob
 import os
 import numpy as np
-from keras.models import Model
-from keras.applications.inception_v3 import InceptionV3
-import time
-import h5py
 
 
 # Helper function for reading images from url, resize them and saving them to the given directory
